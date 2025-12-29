@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
+import { Nav } from "@/components/Nav";
 
 export const metadata: Metadata = {
-  title: "Recruitment System",
-  description: "Something theoretically useful lol",
+  title: "Solar Car Recruitment",
+  description: "Something",
 };
 
 export default function RootLayout({
@@ -14,8 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-[#1a1410] text-[#e8e8e8]">
         <AuthProvider>
+          <Nav />
           {children}
         </AuthProvider>
       </body>

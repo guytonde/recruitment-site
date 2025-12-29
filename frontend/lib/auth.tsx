@@ -4,11 +4,16 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { login, register, refreshToken, getMe } from './api';
 
 interface User {
+  name: ReactNode;
   id: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  eid: string;
+  major: string;
+  year: number;
   role: string;
-  roles?: Array<{role: string; team?: string; system?: string}>;
+  roles: Array<{role: string; team?: string; system?: string}>;
 }
 
 interface AuthContextType {
@@ -16,7 +21,7 @@ interface AuthContextType {
   accessToken: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, firstName: string, lastName: string, eid: string, major: string, year: number) => Promise<void>;
   logout: () => void;
 }
 
@@ -51,8 +56,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('refreshToken', result.refreshToken);
   };
 
-  const handleRegister = async (email: string, password: string, name: string) => {
-    const result = await register(email, password, name);
+  const handleRegister = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    eid: string,
+    major: string,
+    year: number
+  ) => {
+    const result = await register(email, password, firstName, lastName, eid, major, year);
     setUser(result.user);
     setAccessToken(result.accessToken);
     localStorage.setItem('accessToken', result.accessToken);

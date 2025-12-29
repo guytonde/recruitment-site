@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../database.js';
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth.js';
 import rateLimit from 'express-rate-limit';
+import { YEAR_LABELS } from '../lib/constants.js';
 
 dotenv.config();
 
@@ -13,15 +14,33 @@ const router = express.Router();
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  message: 'Too many login attempts, please try again later'
+  message: {error: 'Too many login attempts, please try again later'}
 });
+
+const VALID_MAJORS = [
+  'Electrical Engineering',
+  'Computer Engineering',
+  'Mechanical Engineering',
+  'Chemical Engineering',
+  'Aerospace Engineering',
+  'Computer Science',
+  'Physics',
+  'Materials Science',
+  'Undeclared',
+  'Other'
+];
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password, firstName, lastName, eid, major, year } = req.body;
 
-  if (!email || !password || !name) {
-    return res.status(400).json({error: 'Email, password, and name required'});
+  // Validation
+  if (!email || !password || !firstName || !lastName) {
+    return res.status(400).json({error: 'Email, password, first name, and last name required'});
+  }
+
+  if (email.length > 300 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({error: 'Invalid email address'});
   }
 
   if (password.length < 12) {
@@ -32,7 +51,20 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({error: 'Password must contain uppercase, number, and special character'});
   }
 
+  if (eid && eid.length > 10) {
+    return res.status(400).json({error: 'EID must not exceed 10 characters'});
+  }
+
+  if (major && !VALID_MAJORS.includes(major)) {
+    return res.status(400).json({error: 'Invalid major selected'});
+  }
+
+  if (year && (year < 1 || year > YEAR_LABELS.length)) {
+    return res.status(400).json({error: 'Invalid year selected'});
+  }
+
   try {
+    // Check if user exists
     const existingUser = await pool.query(
       'SELECT id FROM users WHERE email = $1',
       [email]
@@ -42,11 +74,27 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({error: 'User already exists'});
     }
 
+    // Check if EID already used
+    if (eid) {
+      const existingEid = await pool.query(
+        'SELECT id FROM users WHERE eid = $1',
+        [eid]
+      );
+
+      if (existingEid.rows.length > 0) {
+        return res.status(409).json({error: 'EID already in use'});
+      }
+    }
+
+    // Hash password
     const passwordHash = bcrypt.hashSync(password, 12);
 
+    // Create user
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, name',
-      [email, passwordHash, name]
+      `INSERT INTO users (email, password_hash, first_name, last_name, eid, major, year) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING id, email, first_name, last_name, eid, major, year`,
+      [email, passwordHash, firstName, lastName, eid || null, major || null, year || null]
     );
 
     const user = result.rows[0];
@@ -65,7 +113,11 @@ router.post('/register', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        firstName: user.first_name,
+        lastName: user.last_name,
+        eid: user.eid,
+        major: user.major,
+        year: user.year
       }
     });
   } catch (err) {
@@ -84,7 +136,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id, email, name, password_hash FROM users WHERE email = $1',
+      'SELECT id, email, first_name, last_name, eid, major, year, password_hash FROM users WHERE email = $1',
       [email]
     );
 
@@ -115,13 +167,17 @@ router.post('/login', loginLimiter, async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        eid: user.eid,
+        major: user.major,
+        year: user.year,
         role
       }
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({error: 'Login failed womp womp'});
+    res.status(500).json({error: 'Login failed'});
   }
 });
 

@@ -28,10 +28,18 @@ export async function apiCall(
   return response.json();
 }
 
-export async function register(email: string, password: string, name: string) {
+export async function register(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+  eid?: string,
+  major?: string,
+  year?: number
+) {
   return apiCall('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, name }),
+    body: JSON.stringify({ email, password, firstName, lastName, eid, major, year }),
   });
 }
 

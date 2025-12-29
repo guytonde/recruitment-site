@@ -29,8 +29,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded shadow w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-[#191a1a]">
+      <div className="bg-gray-800 p-8 rounded shadow w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6">Login</h1>
 
         {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}

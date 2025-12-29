@@ -22,12 +22,17 @@ export async function initDatabase() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email VARCHAR UNIQUE NOT NULL,
         password_hash VARCHAR NOT NULL,
-        name VARCHAR NOT NULL,
+        first_name VARCHAR NOT NULL,
+        last_name VARCHAR NOT NULL,
+        eid VARCHAR UNIQUE,
+        major VARCHAR,
+        year INT,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
 
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_users_eid ON users(eid);
 
       CREATE TABLE IF NOT EXISTS user_roles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -56,7 +61,6 @@ export async function initDatabase() {
         applicant_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         cycle_id UUID REFERENCES recruitment_cycles(id),
         team VARCHAR NOT NULL,
-        name VARCHAR NOT NULL,
         major VARCHAR,
         year INT,
         system_preferences JSONB,
@@ -108,3 +112,4 @@ export async function initDatabase() {
 }
 
 initDatabase();
+

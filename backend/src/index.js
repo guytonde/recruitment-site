@@ -3,7 +3,6 @@ import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
-import { pool } from './database.js';
 import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import { authenticate } from './middleware/auth.js';
